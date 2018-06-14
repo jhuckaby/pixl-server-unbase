@@ -1,0 +1,22 @@
+{
+	"log_dir": ".",
+	"log_filename": "test.log",
+	"debug_level": 9,
+	"debug": 1,
+	"echo": 0,
+	
+	"Storage": {
+		"engine": "Filesystem",
+		"list_page_size": 10,
+		"concurrency": 4,
+		"cache_key_match": "",
+		"transactions": 0,
+		"log_event_types": { "all": 1 },
+		
+		"Filesystem": {
+			"base_dir": "data",
+			"key_namespaces": 0,
+			"raw_file_paths": 0
+		}
+	}
+}
