@@ -229,6 +229,10 @@ module.exports = Class.create({
 			index[key] = updates[key];
 		}
 		
+		if (updates.remove_words && this.storage.removeWordCache) {
+			delete this.storage.removeWordCache[ index.base_path ];
+		}
+		
 		this.storage.hashPut( this.basePath + '/indexes', index_key, index, callback );
 	},
 	

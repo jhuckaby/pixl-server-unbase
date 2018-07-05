@@ -255,7 +255,7 @@ unbase.createIndex( "myapp", index, function(err) {
 
 This would create a new index with key `myapp`, containing 3 fields.  As soon as the callback is fired, the index is ready to use.  The index is also committed to disk, so upon a restart it will be auto-loaded and ready to use every time.
 
-To update an index, use the [updateIndex()](#updateindex) method.  Note that this is currently *only* for adding or updating [remove words](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#remove-words).  If you want to make other changes to your index, such as field or sorter changes, see the following two sections.  Example update:
+To update an index, use the [updateIndex()](#updateindex) method.  Note that this is currently only for adding or updating [remove words](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#remove-words).  If you want to make other changes to your index, such as field or sorter changes, see the following two sections.  Example update:
 
 ```js
 var updates = {
@@ -648,7 +648,7 @@ This would create a new index with key `myapp`, containing 3 fields.  As soon as
 unbase.updateIndex( INDEX_ID, UPDATES, [CALLBACK] );
 ```
 
-The `updateIndex()` method updates an existing index.  Note that this is currently *only* for adding or updating [remove words](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#remove-words).  Example:
+The `updateIndex()` method updates an existing index.  Note that this is currently only for adding or updating [remove words](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#remove-words), but any properties are accepted for future use.  Example:
 
 ```js
 var updates = {
