@@ -46,6 +46,7 @@ This component does not implement any sort of external API, nor user authenticat
 	* [updateSorter](#updatesorter)
 	* [deleteSorter](#deletesorter)
 	* [insert](#insert)
+	* [update](#update)
 	* [delete](#delete)
 	* [get](#get)
 	* [bulkInsert](#bulkinsert)
