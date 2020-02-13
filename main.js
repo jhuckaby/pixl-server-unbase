@@ -915,25 +915,108 @@ module.exports = Class.create({
 		var self = this;
 		var index = this.indexes[index_key];
 		if (!index) return callback( new Error("Index not found: " + index_key) );
+		var data_path = this.basePath + '/records/' + index_key + '/' + record_id;
 		
 		this.logDebug(6, "Inserting/updating record: " + index_key + '/' + record_id, this.debugLevel(10) ? record_data : null);
 		
-		// first store data itself
-		var data_path = this.basePath + '/records/' + index_key + '/' + record_id;
-		this.storage.put( data_path, record_data, function(err) {
-			if (err) return callback(err);
+		// lock record
+		this.storage.lock( data_path, true, function() {
 			
-			// now index it
-			self.storage.indexRecord( record_id, record_data, index, function(err, state) {
-				if (err) return callback(err);
+			// store data itself
+			self.storage.put( data_path, record_data, function(err) {
+				if (err) {
+					self.storage.unlock( data_path );
+					return callback(err);
+				}
 				
-				// update view triggers
-				state.action = 'insert';
-				self.updateViews(index_key, state);
+				// now index it
+				self.storage.indexRecord( record_id, record_data, index, function(err, state) {
+					if (err) {
+						self.storage.unlock( data_path );
+						return callback(err);
+					}
+					
+					// update view triggers
+					state.action = 'insert';
+					self.updateViews(index_key, state);
+					
+					self.storage.unlock( data_path );
+					callback();
+				}); // indexRecord
+			}); // put
+		}); // lock
+	},
+	
+	update: function(index_key, record_id, updates, callback) {
+		// update existing record, allowing for sparse and num increments
+		if (!callback) callback = noop;
+		var self = this;
+		var index = this.indexes[index_key];
+		if (!index) return callback( new Error("Index not found: " + index_key) );
+		var data_path = this.basePath + '/records/' + index_key + '/' + record_id;
+		
+		this.logDebug(6, "Updating record: " + index_key + '/' + record_id, this.debugLevel(10) ? updates : null);
+		
+		// lock record
+		this.storage.lock( data_path, true, function() {
+			
+			// fetch existing record
+			self.storage.get( data_path, function(err, record_data) {
+				if (err) {
+					self.storage.unlock( data_path );
+					return callback(err);
+				}
 				
-				callback();
-			}); // indexRecord
-		}); // put
+				// apply updates
+				for (var ukey in updates) {
+					var uvalue = updates[ukey];
+					if ((typeof(uvalue) == 'string') && (typeof(record_data[ukey]) == 'number') && uvalue.match(/^(\+|\-)([\d\.]+)$/)) {
+						// increment / decrement numbers
+						var op = RegExp.$1;
+						var amt = parseFloat(RegExp.$2);
+						if (op == '+') record_data[ukey] += amt;
+						else record_data[ukey] -= amt;
+					}
+					else if ((typeof(uvalue) == 'string') && uvalue.match(/^(\+|\-)\w+/)) {
+						// add/remove CSV tags
+						var values = {};
+						if (record_data[ukey]) {
+							record_data[ukey].split(/\W+/).forEach( function(tag) { values[tag] = 1; } );
+						}
+						uvalue.replace(/(\+|\-)(\w+)/g, function(m_all, op, tag) {
+							if (op == '+') values[tag] = 1;
+							else delete values[tag];
+							return '';
+						});
+						record_data[ukey] = Object.keys(values).join(', ');
+					}
+					else record_data[ukey] = uvalue;
+				}
+				
+				// store data itself
+				self.storage.put( data_path, record_data, function(err) {
+					if (err) {
+						self.storage.unlock( data_path );
+						return callback(err);
+					}
+					
+					// now index it
+					self.storage.indexRecord( record_id, record_data, index, function(err, state) {
+						if (err) {
+							self.storage.unlock( data_path );
+							return callback(err);
+						}
+						
+						// update view triggers
+						state.action = 'insert';
+						self.updateViews(index_key, state);
+						
+						self.storage.unlock( data_path );
+						callback();
+					}); // indexRecord
+				}); // put
+			}); // get
+		}); // lock
 	},
 	
 	delete: function(index_key, record_id, callback) {
@@ -942,25 +1025,36 @@ module.exports = Class.create({
 		var self = this;
 		var index = this.indexes[index_key];
 		if (!index) return callback( new Error("Index not found: " + index_key) );
+		var data_path = this.basePath + '/records/' + index_key + '/' + record_id;
 		
 		this.logDebug(6, "Deleting record: " + index_key + '/' + record_id);
 		
-		// first unindex
-		this.storage.unindexRecord( record_id, index, function(err, state) {
-			if (err) return callback(err);
+		// lock record
+		this.storage.lock( data_path, true, function() {
 			
-			// finally, delete record data
-			var data_path = self.basePath + '/records/' + index_key + '/' + record_id;
-			self.storage.delete( data_path, function(err) {
-				if (err) return callback(err);
+			// unindex
+			self.storage.unindexRecord( record_id, index, function(err, state) {
+				if (err) {
+					self.storage.unlock( data_path );
+					return callback(err);
+				}
 				
-				// update view triggers
-				state.action = 'delete';
-				self.updateViews(index_key, state);
-				
-				callback();
-			} ); // delete
-		} ); // unindexRecord
+				// finally, delete record data
+				self.storage.delete( data_path, function(err) {
+					if (err) {
+						self.storage.unlock( data_path );
+						return callback(err);
+					}
+					
+					// update view triggers
+					state.action = 'delete';
+					self.updateViews(index_key, state);
+					
+					self.storage.unlock( data_path );
+					callback();
+				} ); // delete
+			} ); // unindexRecord
+		}); // lock
 	},
 	
 	get: function(index_key, thingy, callback) {
@@ -1019,6 +1113,16 @@ module.exports = Class.create({
 				// paginate
 				if (opts.limit) {
 					sorted_ids = sorted_ids.splice( opts.offset || 0, opts.limit );
+					self.logDebug( 8, 
+						"Found " + total + " records, returning " + sorted_ids.length + " at offset " + (opts.offset || 0), 
+						(opts.limit <= 100) ? sorted_ids : null
+					);
+				}
+				else {
+					self.logDebug( 8, 
+						"Found " + total + " records, returning all of them", 
+						(total <= 100) ? sorted_ids : null
+					);
 				}
 				
 				// load records fast

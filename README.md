@@ -821,7 +821,7 @@ This would remove the `created` sorter from the `myapp` index.  If the index has
 unbase.insert( INDEX_ID, RECORD_ID, RECORD, [CALLBACK] );
 ```
 
-The `insert()` method stores an entire data record (including data not processed by the indexer) and triggers an index on the data as well.  This works for new records, and updating existing records.  The callback is optional.  Example:
+The `insert()` method stores an entire data record (possibly including data not processed by the indexer) and triggers an index on the data as well.  This works for new records, and updating existing records.  The callback is optional.  Example:
 
 ```js
 var record = {
@@ -836,7 +836,47 @@ unbase.insert( "myapp", "RECORD0001", record, function(err) {
 } );
 ```
 
-There is no separate "update" call.  Just call [insert()](#insert) if you want to update an existing record, but make sure you pass in the entire record data object each time (no sparsely populated objects).
+If you use [insert()](#insert) to update an existing record, make sure you pass in the *entire* record data object each time (no sparsely populated objects).
+
+## update
+
+```js
+unbase.update( INDEX_ID, RECORD_ID, UPDATES, [CALLBACK] );
+```
+
+The `update()` method updates a data record (possibly including data not processed by the indexer) and triggers a reindex on the data as well.  The record data you pass here can be *sparsely populated*, i.e. you can specify only changed keys if you want.  Also, string values that begin with `+` or `-` have special meaning (see below).  The callback is optional.  Example:
+
+```js
+var updates = {
+	"ModifyDate": "2018/01/08",
+	"Tags": "feature, assigned, open"
+};
+
+unbase.update( "myapp", "RECORD0001", updates, function(err) {
+	// record is now reindexed
+	if (err) throw err;
+} );
+```
+
+If your record contains any numerical values, and you pass in a replacement *string* that begins with a `+` or `-`, this is interpreted as a mathematical increment or decrement, respectively.  Example:
+
+```js
+unbase.update( "myapp", "RECORD0001", { "Replies": "+1" }, function(err) {
+	// record is now reindexed
+	if (err) throw err;
+} );
+```
+
+If your record had a `Replies` property that contained a number, this update would *increment* that number by `1`.
+
+For record fields that contain comma-separated words (often called "tags"), you can use the update mechanism to add (`+`) or remove (`-`) tags to the word list.  For example, in our `Tags` field shown above, let's remove the tag `open` and add the tag `closed`.  Here is how you would do that:
+
+```js
+unbase.update( "myapp", "RECORD0001", { "Tags": "-open, +closed" }, function(err) {
+	// record is now reindexed
+	if (err) throw err;
+} );
+```
 
 ## delete
 
