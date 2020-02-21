@@ -27,7 +27,7 @@ This component does not implement any sort of external API, nor user authenticat
 	* [Adding, Updating and Deleting Fields](#adding-updating-and-deleting-fields)
 	* [Adding, Updating and Deleting Sorters](#adding-updating-and-deleting-sorters)
 	* [Inserting, Updating and Deleting Records](#inserting-updating-and-deleting-records)
-		+ [Bulk Insert and Delete](#bulk-insert-and-delete)
+		+ [Bulk Operations](#bulk-operations)
 	* [Fetching Records](#fetching-records)
 	* [Searching](#searching)
 	* [Live Search](#live-search)
@@ -50,6 +50,7 @@ This component does not implement any sort of external API, nor user authenticat
 	* [delete](#delete)
 	* [get](#get)
 	* [bulkInsert](#bulkinsert)
+	* [bulkUpdate](#bulkupdate)
 	* [bulkDelete](#bulkdelete)
 	* [search](#search)
 	* [subscribe](#subscribe)
@@ -395,11 +396,11 @@ unbase.delete( "myapp", "RECORD0001", function(err) {
 } );
 ```
 
-### Bulk Insert and Delete
+### Bulk Operations
 
 If you have a list of multiple records to insert, update or delete, convenience methods are provided.  They also spawn background [Jobs](#jobs), so you can poll [getStats()](#getstats) to track progress.
 
-For inserting or updating records in bulk, you can call [bulkInsert()](#bulkinsert), and provide an array containing exactly two properties per element: `id` and `data`.  The `id` property should contain the ID of the record, and the `data` should be the record itself (object).  Example:
+For inserting or updating complete records in bulk, you can call [bulkInsert()](#bulkinsert), and provide an array containing exactly two properties per element: `id` and `data`.  The `id` property should contain the ID of the record, and the `data` should be the record itself (object).  Example:
 
 ```js
 var records = [
@@ -421,39 +422,45 @@ var records = [
 	}
 ];
 
-unbase.bulkInsert( 'myapp', records, function(err) {
+var job_id = unbase.bulkInsert( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
 
-The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).
+The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).  The method returns an alphanumeric Job ID.
 
-To perform a bulk delete, you can call [bulkDelete()](#bulkdelete), and provide a similar array of objects.  However, this time you only need to specify the `id` properties, not the data itself.  Example:
+When you want to apply the same sparse updates to a set of records in bulk, use [bulkUpdate()](#bulkupdate).  This API expects an array of records IDs, and an object containing the sparse updates you want to apply.  Example:
 
 ```js
-var records = [
-	{
-		"id": "RECORD0001"
-	},
-	{
-		"id": "RECORD0002"
-	}
+var records = [ 
+	"RECORD0001", 
+	"RECORD0002" 
+];
+var updates = {
+	"Tags": "bug, closed"
+};
+
+var job_id = unbase.bulkUpdate( 'myapp', records, updates, function(err) {
+	if (err) throw err;
+} );
+```
+
+The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).  The method returns an alphanumeric Job ID.
+
+To perform a bulk delete, call [bulkDelete()](#bulkdelete), and provide an array of record IDs.  Example:
+
+```js
+var records = [ 
+	"RECORD0001", 
+	"RECORD0002"
 ];
 
-unbase.bulkDelete( 'myapp', records, function(err) {
+var job_id = unbase.bulkDelete( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
 
-Alternatively, you can just specify an array of IDs (no need to wrap them in objects).  Example:
-
-```js
-unbase.bulkDelete( 'myapp', ["RECORD0001", "RECORD0002"], function(err) {
-	if (err) throw err;
-} );
-```
-
-The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).
+The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).  The method returns an alphanumeric Job ID.
 
 ## Fetching Records
 
@@ -952,12 +959,36 @@ var records = [
 	}
 ];
 
-unbase.bulkInsert( 'myapp', records, function(err) {
+var job_id = unbase.bulkInsert( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
 
-The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).
+The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).  The method returns an alphanumeric Job ID.
+
+## bulkUpdate
+
+```js
+unbase.bulkUpdate( INDEX_ID, RECORDS, UPDATES [CALLBACK] );
+```
+
+The `bulkDelete()` method allows you to update a large number of records all at once.  You need to provide an array of record IDs, and a sparse object containing the updates to apply.  The same updates are applied to all the records.  Example:
+
+```js
+var records = [ 
+	"RECORD0001", 
+	"RECORD0002" 
+];
+var updates = {
+	"Tags": "bug, closed"
+};
+
+var job_id = unbase.bulkUpdate( 'myapp', records, updates, function(err) {
+	if (err) throw err;
+} );
+```
+
+The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).  The method returns an alphanumeric Job ID.
 
 ## bulkDelete
 
@@ -965,32 +996,20 @@ The callback is optional.  You can omit it, and instead track job progress by po
 unbase.bulkDelete( INDEX_ID, RECORDS, [CALLBACK] );
 ```
 
-The `bulkDelete()` method allows you to delete a large number of records all at once.  You need to provide an array of objects with an `id` property each.  Example:
+The `bulkDelete()` method allows you to delete a large number of records all at once.  You only need to provide an array of record IDs.  Example:
 
 ```js
-var records = [
-	{
-		"id": "RECORD0001"
-	},
-	{
-		"id": "RECORD0002"
-	}
+var records = [ 
+	"RECORD0001", 
+	"RECORD0002" 
 ];
 
-unbase.bulkDelete( 'myapp', records, function(err) {
+var job_id = unbase.bulkDelete( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
 
-Alternatively, you can just specify an array of IDs (no need to wrap them in objects).  Example:
-
-```js
-unbase.bulkDelete( 'myapp', ["RECORD0001", "RECORD0002"], function(err) {
-	if (err) throw err;
-} );
-```
-
-The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).
+The callback is optional.  You can omit it, and instead track job progress by polling [getStats()](#getstats).  The method returns an alphanumeric Job ID.
 
 ## search
 

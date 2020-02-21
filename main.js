@@ -121,7 +121,7 @@ module.exports = Class.create({
 			return;
 		}
 		
-		job.elapsed = Tools.timeNow() - job.start;
+		job.elapsed = Tools.shortFloat( Tools.timeNow() - job.start );
 		delete job.progress;
 		
 		this.logDebug(6, "Job completed: " + job.title, job);
@@ -860,11 +860,62 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // eachSeries
+		
+		return job;
+	},
+	
+	bulkUpdate: function(index_key, records, updates, callback) {
+		// bulk update array of records with same updates
+		// array elements must have { id }, or just plain id strings
+		if (!callback) callback = noop;
+		var self = this;
+		var index = this.indexes[index_key];
+		if (!index) return callback( new Error("Index not found: " + index_key) );
+		if (this.countIndexJobs(index_key)) return callback( new Error("Index is busy: " + index_key) );
+		
+		// some basic validation
+		if ((typeof(records) != 'object') || !records.length) {
+			return callback( new Error("Bulk Update: Invalid records array") );
+		}
+		for (var idx = 0, len = records.length; idx < len; idx++) {
+			if (typeof(records[idx]) != 'object') records[idx] = { id: records[idx] };
+			var record = records[idx];
+			if (!record.id) {
+				return callback( new Error("Bulk Update: Record #" + idx + " has no ID") );
+			}
+		}
+		
+		var job = this.createJob({ title: "Updating " + records.length + " records", index: index_key });
+		var num_records = records.length;
+		var record_idx = 0;
+		
+		async.eachSeries( records,
+			function(record, callback) {
+				self.update( index_key, record.id, updates, function(err) {
+					if (err) {
+						return callback( new Error("Bulk Update: Record #" + record_idx + " failed: " + err) );
+					}
+					
+					// update job progress
+					record_idx++;
+					self.updateJob(job, { progress: record_idx / num_records });
+					
+					callback();
+				} ); // insert
+			},
+			function(err) {
+				// job finished
+				self.finishJob(job);
+				callback(err);
+			}
+		); // eachSeries
+		
+		return job;
 	},
 	
 	bulkDelete: function(index_key, records, callback) {
-		// bulk insert array of records
-		// array elements must have: { id }
+		// bulk delete array of records
+		// array elements must have { id }, or just plain id strings
 		if (!callback) callback = noop;
 		var self = this;
 		var index = this.indexes[index_key];
@@ -907,10 +958,12 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // eachSeries
+		
+		return job;
 	},
 	
 	insert: function(index_key, record_id, record_data, callback) {
-		// insert (or update) record
+		// insert (or update) full record
 		if (!callback) callback = noop;
 		var self = this;
 		var index = this.indexes[index_key];
