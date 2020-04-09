@@ -299,6 +299,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	reindex: function(index_key, field_ids, callback) {
@@ -396,6 +398,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	addField: function(index_key, field, callback) {
@@ -464,6 +468,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	updateField: function(index_key, new_field, callback) {
@@ -548,6 +554,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	deleteField: function(index_key, field_id, callback) {
@@ -611,6 +619,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	addSorter: function(index_key, sorter, callback) {
@@ -681,6 +691,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	updateSorter: function(index_key, new_sorter, callback) {
@@ -749,6 +761,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	deleteSorter: function(index_key, sorter_id, callback) {
@@ -814,6 +828,8 @@ module.exports = Class.create({
 				callback(err);
 			}
 		); // series
+		
+		return job;
 	},
 	
 	bulkInsert: function(index_key, records, callback) {
