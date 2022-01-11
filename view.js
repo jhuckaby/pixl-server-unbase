@@ -111,9 +111,9 @@ module.exports = Class.create({
 		if (state.action == 'insert') {
 			// record was inserted or updated
 			// either way, we need to know if it matches our search now
-			var old_hit = this.results.hasOwnProperty(record_id);
+			var old_hit = !!(record_id in this.results);
 			var temp_results = this.storage._searchSingle(this.query, record_id, state.idx_data, this.index);
-			var new_hit = temp_results.hasOwnProperty(record_id);
+			var new_hit = !!(record_id in temp_results);
 			
 			if (!old_hit && new_hit) {
 				// add record to our search results
@@ -155,7 +155,7 @@ module.exports = Class.create({
 		else if (state.action == 'delete') {
 			// record was deleted
 			// see if this affects us
-			var old_hit = this.results.hasOwnProperty(record_id);
+			var old_hit = !!(record_id in this.results);
 			if (old_hit) {
 				// remove record from our search results
 				this.removeRecord(state);
