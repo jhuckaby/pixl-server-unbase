@@ -1,6 +1,6 @@
 {
 	"name": "pixl-server-unbase",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"description": "A database component for the pixl-server framework.",
 	"author": "Joseph Huckaby <jhuckaby@gmail.com>",
 	"homepage": "https://github.com/jhuckaby/pixl-server-unbase",
@@ -18,7 +18,6 @@
 		"slow"
 	],
 	"dependencies": {
-		"pixl-server": "^1.0.0",
 		"pixl-class": "^1.0.0",
 		"pixl-tools": "^1.0.0",
 		"pixl-perf": "^1.0.0",
@@ -28,7 +27,7 @@
 	"devDependencies": {
 		"pixl-unit": "^1.0.10",
 		"pixl-server": "^1.0.0",
-		"pixl-server-storage": "^2.0.5"
+		"pixl-server-storage": "^3.0.13"
 	},
 	"scripts": {
 		"test": "pixl-unit test/test.js"
