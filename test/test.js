@@ -145,6 +145,8 @@ module.exports = {
 				test.ok( data.total == 1, "data.total is correct: " + data.total );
 				test.ok( data.records.length == 1, "data.records.length in correct: " + data.records.length );
 				test.ok( data.records[0].ID === orig_record.ID, "Record ID is correct: " + data.records[0].ID );
+				test.ok( !!data.perf, "No perf in response" );
+				test.debug("Perf", data.perf.metrics());
 				test.done();
 			} );
 		},

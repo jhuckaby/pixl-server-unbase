@@ -1158,12 +1158,19 @@ module.exports = Class.create({
 		
 		this.logDebug(7, "Performing " + index_key + " search: " + query, opts);
 		
+		var perf = new Perf();
+		perf.begin();
+		
 		// shortcut query for summary: #summary:status
 		if ((typeof(query) == 'string') && query.match(/^\s*\#summary\:(\w+)/i)) {
 			var field_id = RegExp.$1;
+			perf.begin('summary');
+			
 			return this.storage.getFieldSummary( field_id, index, function(err, values) {
+				perf.end('summary');
 				callback(err, err ? null : {
-					values: values
+					values: values,
+					perf: perf
 				});
 			});
 		} // field summary
@@ -1171,10 +1178,12 @@ module.exports = Class.create({
 		if (!opts.sort_by) opts.sort_by = '_id';
 		if (!opts.sort_dir) opts.sort_dir = 1;
 		
-		this.storage.searchRecords( query, index, function(err, results) {
+		this.storage.searchRecords( query, index, function(err, results, state) {
 			if (err) return callback(err);
+			if (state && state.perf) perf.import( state.perf );
 			
 			var finish = function(err, sorted_ids) {
+				perf.end('sort');
 				if (err) return callback(err);
 				var total = sorted_ids.length;
 				// if (!total) return callback(null, { records: [], total: 0 } );
@@ -1195,12 +1204,16 @@ module.exports = Class.create({
 				}
 				
 				// load records fast
+				perf.begin('load');
 				self.getRecords( index_key, sorted_ids, function(err, records) {
+					perf.end('load');
 					if (err) return callback(err);
-					callback( null, { records: records, total: total } );
+					callback( null, { records: records, total: total, perf: perf } );
 				} );
 				
 			}; // finish
+			
+			perf.begin('sort');
 			
 			if (opts.sort_by == '_id') {
 				// natural ID sort (fast)

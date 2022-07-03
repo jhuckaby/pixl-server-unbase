@@ -1034,6 +1034,7 @@ unbase.search( 'myapp', 'tags:open', { offset: 0, limit: 10 }, function(err, dat
 	if (err) throw err;
 	// data.records is a sorted array of records in our offset/limit
 	// data.total is the total number of records matched (ignoring our limit)
+	// data.perf is a performance tracker (pixl-perf) containing query metrics
 } );
 ```
 
@@ -1051,6 +1052,7 @@ unbase.search( 'myapp', 'tags:open', opts, function(err, data) {
 	if (err) throw err;
 	// data.records is a sorted array of records in our offset/limit
 	// data.total is the total number of records matched (ignoring our limit)
+	// data.perf is a performance tracker (pixl-perf) containing query metrics
 } );
 ```
 
@@ -1159,7 +1161,7 @@ See [Logging](https://github.com/jhuckaby/pixl-server-storage/blob/master/README
 
 **The MIT License (MIT)**
 
-Copyright (c) 2018 Joseph Huckaby.
+Copyright (c) 2018 - 2022 Joseph Huckaby.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
