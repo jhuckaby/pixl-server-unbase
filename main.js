@@ -163,7 +163,7 @@ module.exports = Class.create({
 	
 	getIndex: function(index_key) {
 		// get index by ID
-		return this.this.indexes[index_key];
+		return this.indexes[index_key];
 	},
 	
 	createIndex: function(index_key, index, callback) {
@@ -1010,6 +1010,7 @@ module.exports = Class.create({
 					self.updateViews(index_key, state);
 					
 					self.storage.unlock( data_path );
+					self.logDebug(6, "Insert complete", { index: index_key, id: record_id } );
 					callback();
 				}); // indexRecord
 			}); // put
@@ -1081,6 +1082,7 @@ module.exports = Class.create({
 						self.updateViews(index_key, state);
 						
 						self.storage.unlock( data_path );
+						self.logDebug(6, "Update complete", { index: index_key, id: record_id } );
 						callback();
 					}); // indexRecord
 				}); // put
