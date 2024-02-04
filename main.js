@@ -1163,7 +1163,7 @@ module.exports = Class.create({
 		var perf = new Perf();
 		perf.begin();
 		
-		// shortcut query for summary: #summary:status
+		// shortcut query for summary: "#summary:status"
 		if ((typeof(query) == 'string') && query.match(/^\s*\#summary\:(\w+)/i)) {
 			var field_id = RegExp.$1;
 			perf.begin('summary');
@@ -1176,6 +1176,21 @@ module.exports = Class.create({
 				});
 			});
 		} // field summary
+		
+		// shortcut query for single record by primary id: "#id:12345"
+		if ((typeof(query) == 'string') && query.match(/^\s*\#id\:(\S+)/i)) {
+			var record_id = RegExp.$1;
+			perf.begin('get');
+			
+			return this.getRecord( index_key, record_id, function(err, record) {
+				perf.end('get');
+				callback(err, err ? null : {
+					records: [ record ],
+					total: 1,
+					perf: perf
+				});
+			});
+		} // id shortcut
 		
 		if (!opts.sort_by) opts.sort_by = '_id';
 		if (!opts.sort_dir) opts.sort_dir = 1;
