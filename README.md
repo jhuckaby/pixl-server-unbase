@@ -68,27 +68,27 @@ This component does not implement any sort of external API, nor user authenticat
 
 Use [npm](https://www.npmjs.com/) to install the module:
 
-```
+```sh
 npm install pixl-server pixl-server-storage pixl-server-unbase
 ```
 
 Here is a simple usage example.  Note that the component's official name is `Unbase`, so that is what you should use for the configuration key, and for gaining access to the component via your server object.
 
-```javascript
-var PixlServer = require('pixl-server');
-var server = new PixlServer({
+```js
+const PixlServer = require('pixl-server');
+let server = new PixlServer({
 	
 	__name: 'MyServer',
 	__version: "1.0",
 	
 	config: {
-		"log_dir": "/var/log",
+		"log_dir": "/let/log",
 		"debug_level": 9,
 		
 		"Storage": {
 			"engine": "Filesystem",
 			"Filesystem": {
-				"base_dir": "/var/data/myapp",
+				"base_dir": "/let/data/myapp",
 			},
 			"transactions": true
 		},
@@ -132,10 +132,10 @@ var server = new PixlServer({
 
 server.startup( function() {
 	// server startup complete
-	var unbase = server.Unbase;
+	let unbase = server.Unbase;
 	
 	// setup record object
-	var record = {
+	let record = {
 		"BodyText": "This is the body text of my ticket, which <b>may contain HTML</b> and \nmultiple\nlines.\n",
 		"ModifyDate": "2018/01/07",
 		"Tags": "bug, assigned, open"
@@ -160,16 +160,16 @@ server.startup( function() {
 
 Notice how we are loading the [pixl-server](https://github.com/jhuckaby/pixl-server) parent module, and then specifying [pixl-server-storage](https://github.com/jhuckaby/pixl-server-storage) and [pixl-server-unbase](https://github.com/jhuckaby/pixl-server-unbase) as components:
 
-```javascript
-	components: [
-		require('pixl-server-storage'),
-		require('pixl-server-unbase')
-	]
+```js
+components: [
+	require('pixl-server-storage'),
+	require('pixl-server-unbase')
+]
 ```
 
-This example is a very simple server configuration, which will start a local filesystem storage instance pointed at `/var/data/myapp` as a base directory.  It then inserts a single record, and searches for it.
+This example is a very simple server configuration, which will start a local filesystem storage instance pointed at `/let/data/myapp` as a base directory.  It then inserts a single record, and searches for it.
 
-It is recommended that you enable [transaction support](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Transactions.md) in your [pixl-server-storage](https://github.com/jhuckaby/pixl-server-storage) configuration.  This ensures that your data will never become corrupted in the event of a sudden power loss or crash.
+It is highly recommended that you enable [transaction support](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Transactions.md) in your [pixl-server-storage](https://github.com/jhuckaby/pixl-server-storage) configuration.  This ensures that your data will never become corrupted in the event of a sudden power loss or crash.
 
 # Configuration
 
@@ -179,31 +179,33 @@ The configuration for this component is set by passing in a `Unbase` key in the 
 
 The optional `indexes` property allows you to bootstrap indexes, so they are ready to go instantly, without having to orchestrate API calls to [createIndex()](#createindex) from an install script or setup UI.  The property should be an object with keys corresponding to each index you want to bootstrap.  Each key should contain a full index configuration (see [Indexer Configuration](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#configuration) for full details).  Example:
 
-```js
-"indexes": {
-	"myapp": {
-		"fields": [
-			{
-				"id": "body",
-				"source": "/BodyText",
-				"min_word_length": 3,
-				"max_word_length": 64,
-				"use_remove_words": true,
-				"use_stemmer": true,
-				"filter": "html"
-			},
-			{
-				"id": "modified",
-				"source": "/ModifyDate",
-				"type": "date"
-			},
-			{
-				"id": "tags",
-				"source": "/Tags",
-				"master_list": true
-			}
-		],
-		"remove_words": ["the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "was", "for", "on", "are", "as", "with", "his", "they"]
+```json
+{
+	"indexes": {
+		"myapp": {
+			"fields": [
+				{
+					"id": "body",
+					"source": "/BodyText",
+					"min_word_length": 3,
+					"max_word_length": 64,
+					"use_remove_words": true,
+					"use_stemmer": true,
+					"filter": "html"
+				},
+				{
+					"id": "modified",
+					"source": "/ModifyDate",
+					"type": "date"
+				},
+				{
+					"id": "tags",
+					"source": "/Tags",
+					"master_list": true
+				}
+			],
+			"remove_words": ["the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "was", "for", "on", "are", "as", "with", "his", "they"]
+		}
 	}
 }
 ```
@@ -221,7 +223,7 @@ The optional `base_path` property allows you to specify a custom storage key pre
 The code examples all assume you have your preloaded `Unbase` component instance in a local variable named `unbase`.  The component instance can be retrieved from a running server like this:
 
 ```js
-var unbase = server.Unbase;
+let unbase = server.Unbase;
 ```
 
 ## Creating, Updating and Deleting Indexes
@@ -229,7 +231,7 @@ var unbase = server.Unbase;
 For creating indexes, you have two options.  You can either "bootstrap" the index by specifying its definition in the configuration (see above), or you can programmatically create an index at any time.  For the latter, use the [createIndex()](#createindex) method:
 
 ```js
-var index = {
+let index = {
 	"fields": [
 		{
 			"id": "body",
@@ -260,7 +262,7 @@ This would create a new index with key `myapp`, containing 3 fields.  As soon as
 To update an index, use the [updateIndex()](#updateindex) method.  Note that this is currently only for adding or updating [remove words](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#remove-words).  If you want to make other changes to your index, such as field or sorter changes, see the following two sections.  Example update:
 
 ```js
-var updates = {
+let updates = {
 	"remove_words": ["the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "was", "for", "on", "are", "as", "with", "his", "they"]
 };
 
@@ -284,7 +286,7 @@ If the index has any associated records, this spawns a background job to delete 
 You can add, update or delete fields on-the-fly, and your records will automatically be reindexed.  To add a new field, call [addField()](#addfield).  Example:
 
 ```js
-var field = {
+let field = {
 	"id": "status",
 	"source": "/Status",
 	"master_list": true
@@ -300,7 +302,7 @@ This would add a new field to the index `myapp` with ID `status`.  If the index 
 To update an existing field, call [updateField()](#updatefield).  You cannot change the field ID, but you can change any other properties, or add/remove them.  Example:
 
 ```js
-var field = {
+let field = {
 	"id": "status",
 	"source": "/Status",
 	"master_list": true,
@@ -329,7 +331,7 @@ This would remove the `status` field from the `myapp` index.  If the index has a
 You can add, update or delete [sorters](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#sorting-results) on-the-fly, and your records will automatically be reindexed.  To add a new sorter, call [addSorter()](#addsorter).  Example:
 
 ```js
-var sorter = {
+let sorter = {
 	"id": "created",
 	"source": "/Createdate",
 	"type": "number"
@@ -345,7 +347,7 @@ This would add a new sorter to the index `myapp` with ID `created`.  If the inde
 To update an existing sorter, call [updateSorter()](#updatesorter).  You cannot change the sorter ID, but you can change any other properties, or add/remove them.  Example:
 
 ```js
-var sorter = {
+let sorter = {
 	"id": "created",
 	"source": "/Created",
 	"type": "number"
@@ -373,7 +375,7 @@ This would remove the `created` sorter from the `myapp` index.  If the index has
 To insert or update a single record, call [insert()](#insert).  This will store the entire data record (including data not processed by the indexer) and trigger an index on the data as well.  The callback is optional.  Example:
 
 ```js
-var record = {
+let record = {
 	"BodyText": "This is the body text of my record, which <b>may contain HTML</b> and \nmultiple\nlines.\n",
 	"ModifyDate": "2018/01/07",
 	"Tags": "bug, assigned, open"
@@ -403,7 +405,7 @@ If you have a list of multiple records to insert, update or delete, convenience 
 For inserting or updating complete records in bulk, you can call [bulkInsert()](#bulkinsert), and provide an array containing exactly two properties per element: `id` and `data`.  The `id` property should contain the ID of the record, and the `data` should be the record itself (object).  Example:
 
 ```js
-var records = [
+let records = [
 	{
 		"id": "RECORD0001",
 		"data": {
@@ -422,7 +424,7 @@ var records = [
 	}
 ];
 
-var job_id = unbase.bulkInsert( 'myapp', records, function(err) {
+let job_id = unbase.bulkInsert( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
@@ -432,15 +434,15 @@ The callback is optional.  You can omit it, and instead track job progress by po
 When you want to apply the same sparse updates to a set of records in bulk, use [bulkUpdate()](#bulkupdate).  This API expects an array of records IDs, and an object containing the sparse updates you want to apply.  Example:
 
 ```js
-var records = [ 
+let records = [ 
 	"RECORD0001", 
 	"RECORD0002" 
 ];
-var updates = {
+let updates = {
 	"Tags": "bug, closed"
 };
 
-var job_id = unbase.bulkUpdate( 'myapp', records, updates, function(err) {
+let job_id = unbase.bulkUpdate( 'myapp', records, updates, function(err) {
 	if (err) throw err;
 } );
 ```
@@ -450,12 +452,12 @@ The callback is optional.  You can omit it, and instead track job progress by po
 To perform a bulk delete, call [bulkDelete()](#bulkdelete), and provide an array of record IDs.  Example:
 
 ```js
-var records = [ 
+let records = [ 
 	"RECORD0001", 
 	"RECORD0002"
 ];
 
-var job_id = unbase.bulkDelete( 'myapp', records, function(err) {
+let job_id = unbase.bulkDelete( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
@@ -497,7 +499,7 @@ unbase.search( 'myapp', 'tags:open', { offset: 0, limit: 10 }, function(err, dat
 This would find all records that have `open` in their `tags` field, and return the first 10 records at offset 0.  By default the records are sorted by their IDs (ascending).  However, you can provide your own sorting options:
 
 ```js
-var opts = { 
+let opts = { 
 	offset: 0, 
 	limit: 10,
 	sort_by: "created",
@@ -518,7 +520,7 @@ This would perform the same search as the above example, but this time it will s
 In addition to performing single index searches, you can also "subscribe" to a search, and be notified when your result set changes.  This includes records getting added, deleted or updated within your offset/limit.  To subscribe to a search, call [subscribe()](#subscribe), and pass in the same arguments as [search()](#search), but omit the callback.  The method returns a special [Subscriber](#subscriber) object, which you can attach event listeners to.  Example use:
 
 ```js
-var sub = unbase.subscribe( 'myapp', 'tags:open', { offset: 0, limit: 10 } );
+let sub = unbase.subscribe( 'myapp', 'tags:open', { offset: 0, limit: 10 } );
 
 sub.on('change', function(data) {
 	// our search results have changed
@@ -551,7 +553,7 @@ In addition to subscribing to live *record* searches, you can also subscribe to 
 To subscribe to a field summary, use the same [subscribe()](#subscribe) method, but send in this special query syntax: `#summary:FIELDID`.  Also, you can omit the options object.  Example use:
 
 ```js
-var sub = unbase.subscribe( 'myapp', '#summary:status' );
+let sub = unbase.subscribe( 'myapp', '#summary:status' );
 
 sub.on('change', function(data) {
 	// our field summary has changed
@@ -566,12 +568,12 @@ As you can see, field summary subscriptions also emit [change](#event-change) ev
 Certain operations on the database may cause a "reindex", where the engine must iterate over all records and update them.  These types of ops spawn a "job" which is an internal tracking system for long-running tasks.  To poll active jobs, call the [getStats()](#getstats) method.  This returns a variety of stats about the storage engine, but also a `jobs` property, which describes all active jobs.  Example:
 
 ```js
-var stats = unbase.getStats();
+let stats = unbase.getStats();
 ```
 
 Example stats output:
 
-```js
+```json
 {
 	"jobs": {
 		"ji54bekr02": {
@@ -610,7 +612,7 @@ unbase.getIndex( INDEX_ID );
 The `getIndex()` method fetches a [Index Configuration](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#configuration) object given its ID, and returns it.  This is a synchronous method, as all indexes are stored in memory.  Example:
 
 ```js
-var index = unbase.getIndex("myapp");
+let index = unbase.getIndex("myapp");
 ```
 
 ## createIndex
@@ -622,7 +624,7 @@ unbase.createIndex( INDEX_ID, INDEX, [CALLBACK] );
 The `createIndex()` method creates a new index.  Pass in a unique Index ID (alphanumeric lower-case), and an [Index Configuration](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#configuration) object.  The callback is optional.  Example:
 
 ```js
-var index = {
+let index = {
 	"fields": [
 		{
 			"id": "body",
@@ -659,7 +661,7 @@ unbase.updateIndex( INDEX_ID, UPDATES, [CALLBACK] );
 The `updateIndex()` method updates an existing index.  Note that this is currently only for adding or updating [remove words](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#remove-words), but any properties are accepted for future use.  Example:
 
 ```js
-var updates = {
+let updates = {
 	"remove_words": ["the", "of", "and", "a", "to", "in", "is", "you", "that", "it", "he", "was", "for", "on", "are", "as", "with", "his", "they"]
 };
 
@@ -711,7 +713,7 @@ unbase.addField( INDEX_ID, FIELD, [CALLBACK] );
 The `addField()` method adds a new field to an existing index.  Pass in the Index ID, and a [Field Configuration](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#configuration) object.  The callback is optional.  Example:
 
 ```js
-var field = {
+let field = {
 	"id": "status",
 	"source": "/Status",
 	"master_list": true
@@ -733,7 +735,7 @@ unbase.updateField( INDEX_ID, FIELD, [CALLBACK] );
 The `updateField()` method updates an existing field.  Pass in the Index ID, and a [Field Configuration](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#configuration) object.  You cannot change the field ID, but you can change any other properties, or add/remove them.  The callback is optional.  Example:
 
 ```js
-var field = {
+let field = {
 	"id": "status",
 	"source": "/Status",
 	"master_list": true,
@@ -772,7 +774,7 @@ unbase.addSorter( INDEX_ID, SORTER, [CALLBACK] );
 The `addSorter()` method adds a new [sorter](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#sorting-results) to an existing index.  The callback is optional.  Example:
 
 ```js
-var sorter = {
+let sorter = {
 	"id": "created",
 	"source": "/Createdate",
 	"type": "number"
@@ -794,7 +796,7 @@ unbase.updateSorter( INDEX_ID, SORTER, [CALLBACK] );
 The `updateSorter()` method updates an existing [sorter](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#sorting-results).  You cannot change the sorter ID, but you can change any other properties, or add/remove them.  The callback is optional.  Example:
 
 ```js
-var sorter = {
+let sorter = {
 	"id": "created",
 	"source": "/Created",
 	"type": "number"
@@ -832,7 +834,7 @@ unbase.insert( INDEX_ID, RECORD_ID, RECORD, [CALLBACK] );
 The `insert()` method stores an entire data record (possibly including data not processed by the indexer) and triggers an index on the data as well.  This works for new records, and updating existing records.  The callback is optional.  Example:
 
 ```js
-var record = {
+let record = {
 	"BodyText": "This is the body text of my record, which <b>may contain HTML</b> and \nmultiple\nlines.\n",
 	"ModifyDate": "2018/01/07",
 	"Tags": "bug, assigned, open"
@@ -855,7 +857,7 @@ unbase.update( INDEX_ID, RECORD_ID, UPDATES, [CALLBACK] );
 The `update()` method updates a data record (possibly including data not processed by the indexer) and triggers a reindex on the data as well.  The record data you pass here can be *sparsely populated*, i.e. you can specify only changed keys if you want.  Also, string values that begin with `+` or `-` have special meaning (see below).  The callback is optional.  Example:
 
 ```js
-var updates = {
+let updates = {
 	"ModifyDate": "2018/01/08",
 	"Tags": "feature, assigned, open"
 };
@@ -940,7 +942,7 @@ unbase.bulkInsert( INDEX_ID, RECORDS, [CALLBACK] );
 The `bulkInsert()` method allows you to insert a large number of records all at once.  You need to provide an array containing exactly two properties per element: `id` and `data`.  The `id` property should contain the ID of the record, and the `data` should be the record itself (object).  Example:
 
 ```js
-var records = [
+let records = [
 	{
 		"id": "RECORD0001",
 		"data": {
@@ -959,7 +961,7 @@ var records = [
 	}
 ];
 
-var job_id = unbase.bulkInsert( 'myapp', records, function(err) {
+let job_id = unbase.bulkInsert( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
@@ -975,15 +977,15 @@ unbase.bulkUpdate( INDEX_ID, RECORDS, UPDATES [CALLBACK] );
 The `bulkDelete()` method allows you to update a large number of records all at once.  You need to provide an array of record IDs, and a sparse object containing the updates to apply.  The same updates are applied to all the records.  Example:
 
 ```js
-var records = [ 
+let records = [ 
 	"RECORD0001", 
 	"RECORD0002" 
 ];
-var updates = {
+let updates = {
 	"Tags": "bug, closed"
 };
 
-var job_id = unbase.bulkUpdate( 'myapp', records, updates, function(err) {
+let job_id = unbase.bulkUpdate( 'myapp', records, updates, function(err) {
 	if (err) throw err;
 } );
 ```
@@ -999,12 +1001,12 @@ unbase.bulkDelete( INDEX_ID, RECORDS, [CALLBACK] );
 The `bulkDelete()` method allows you to delete a large number of records all at once.  You only need to provide an array of record IDs.  Example:
 
 ```js
-var records = [ 
+let records = [ 
 	"RECORD0001", 
 	"RECORD0002" 
 ];
 
-var job_id = unbase.bulkDelete( 'myapp', records, function(err) {
+let job_id = unbase.bulkDelete( 'myapp', records, function(err) {
 	if (err) throw err;
 } );
 ```
@@ -1041,7 +1043,7 @@ unbase.search( 'myapp', 'tags:open', { offset: 0, limit: 10 }, function(err, dat
 This would find all records that have `open` in their `tags` field, and return the first 10 records at offset 0.  By default the records are sorted by their IDs (ascending).  However, you can provide your own sorting options:
 
 ```js
-var opts = { 
+let opts = { 
 	offset: 0, 
 	limit: 10,
 	sort_by: "created",
@@ -1067,7 +1069,7 @@ unbase.subscribe( INDEX_ID, QUERY, OPTIONS );
 The `subscribe()` method sets up a live search connection.  It returns a special [Subscriber](#subscriber) object, which you can attach event listeners to.  The subscriber will be notified every time the search results change.  The method arguments are largely the same as [search()](#search), except for the callback, which is omitted.  Example:
 
 ```js
-var sub = unbase.subscribe( 'myapp', 'tags:open', { offset: 0, limit: 10 } );
+let sub = unbase.subscribe( 'myapp', 'tags:open', { offset: 0, limit: 10 } );
 
 sub.on('change', function(data) {
 	// our search results have changed
@@ -1089,7 +1091,7 @@ unbase.getStats();
 The `getStats()` method returns performance and job statistics data.  You can poll this method to display status on background jobs, and other internal storage metrics.  Example:
 
 ```js
-var stats = unbase.getStats();
+let stats = unbase.getStats();
 ```
 
 For details on the contents of the stats object, see [Performance Metrics](https://github.com/jhuckaby/pixl-server-storage#performance-metrics) and [Jobs](#jobs).
