@@ -1037,6 +1037,26 @@ module.exports = Class.create({
 					return callback(err);
 				}
 				
+				// allow updates to be a function
+				if (typeof(updates) == 'function') {
+					var result = updates(record_data);
+					if (result === false) {
+						// user doesn't want to update anymore, fine!
+						self.logDebug(6, "User aborted update");
+						self.storage.unlock( data_path );
+						return callback("ABORT");
+					}
+					else if (typeof(result) == 'object') {
+						// user returned actual updates, let's apply them
+						updates = result;
+					}
+					else {
+						// unknown result
+						self.storage.unlock( data_path );
+						return callback( new Error("Unknown result type from update handler") );
+					}
+				}
+				
 				// apply updates
 				for (var ukey in updates) {
 					var uvalue = updates[ukey];
@@ -1083,7 +1103,7 @@ module.exports = Class.create({
 						
 						self.storage.unlock( data_path );
 						self.logDebug(6, "Update complete", { index: index_key, id: record_id } );
-						callback();
+						callback( null, record_data );
 					}); // indexRecord
 				}); // put
 			}); // get

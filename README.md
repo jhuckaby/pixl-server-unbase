@@ -888,6 +888,23 @@ unbase.update( "myapp", "RECORD0001", { "Tags": "-open, +closed" }, function(err
 } );
 ```
 
+Instead of passing an object containing properties to update, you can pass a function as the 3rd argument.  Your update function will be called after the existing record is fetched and locked, so you can manipulate the record using code.  Your function can then return the updates it wants to apply, or `false` to abort the transaction.  All the locking and transaction handling is transparent to the user.  Example:
+
+```js
+unbase.update( "myapp", "RECORD0001", 
+	function(record) {
+		// record has been locked and loaded
+		return { BodyText: record.BodyText + " -- and we appended this!" };
+	}, 
+	function(err) {
+		// record is now reindexed
+		if (err) throw err;
+	}
+);
+```
+
+If your function returns `false`, the update is aborted, and the final callback (if provided) is invoked with the string `ABORT` as the sole argument.
+
 ## delete
 
 ```js
