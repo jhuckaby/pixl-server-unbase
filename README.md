@@ -1045,6 +1045,7 @@ The `search()` method performs an index search, and returns the matching records
 | `sort_by` | String | Specifies which [sorter](https://github.com/jhuckaby/pixl-server-storage/blob/master/docs/Indexer.md#sorting-results) to sort the results by, defaults to sorting by record ID. |
 | `sort_dir` | -1 | Specifies which sort direction, `1` for ascending (default), or `-1` for descending. |
 | `sort_type` | String | If `sort_by` is omitted, records will be sorted by their IDs.  In that case you can set `sort_type` to `string` to treat the IDs as strings (default), or `number` to treat them as numbers.  This can affect the sort order. |
+| `ids` | Boolean | Set this to true to return only record IDs, and not full records. |
 
 Example search:
 

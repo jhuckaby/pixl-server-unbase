@@ -1173,7 +1173,7 @@ module.exports = Class.create({
 	
 	search: function(index_key, query, opts, callback) {
 		// perform combo search, sort, paginate and fetch
-		// opts: { sort_by, sort_dir, [sort_type], offset, limit }
+		// opts: { sort_by, sort_dir, [sort_type], offset, limit, ids? }
 		var self = this;
 		var index = this.indexes[index_key];
 		if (!index) return callback( new Error("Index not found: " + index_key) );
@@ -1238,6 +1238,11 @@ module.exports = Class.create({
 						"Found " + total + " records, returning all of them", 
 						(total <= 100) ? sorted_ids : null
 					);
+				}
+				
+				// user may want ids only
+				if (opts.ids) {
+					return callback( null, { records: sorted_ids, total: total, perf: perf } );
 				}
 				
 				// load records fast
