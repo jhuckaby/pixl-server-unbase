@@ -978,6 +978,33 @@ module.exports = Class.create({
 		return job;
 	},
 	
+	put: function(index_key, record_id, record_data, callback) {
+		// insert record without indexing
+		if (!callback) callback = noop;
+		var self = this;
+		var index = this.indexes[index_key];
+		if (!index) return callback( new Error("Index not found: " + index_key) );
+		var data_path = this.basePath + '/records/' + index_key + '/' + record_id;
+		
+		this.logDebug(6, "Storing record: " + index_key + '/' + record_id, this.debugLevel(10) ? record_data : null);
+		
+		// lock record
+		this.storage.lock( data_path, true, function() {
+			
+			// store data itself
+			self.storage.put( data_path, record_data, function(err) {
+				if (err) {
+					self.storage.unlock( data_path );
+					return callback(err);
+				}
+				
+				self.storage.unlock( data_path );
+				self.logDebug(6, "Store complete", { index: index_key, id: record_id } );
+				callback();
+			}); // put
+		}); // lock
+	},
+	
 	insert: function(index_key, record_id, record_data, callback) {
 		// insert (or update) full record
 		if (!callback) callback = noop;
