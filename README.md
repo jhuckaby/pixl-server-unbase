@@ -829,6 +829,7 @@ This would remove the `created` sorter from the `myapp` index.  If the index has
 
 ```js
 unbase.insert( INDEX_ID, RECORD_ID, RECORD, [CALLBACK] );
+unbase.insert( ARGS, [CALLBACK] );
 ```
 
 The `insert()` method stores an entire data record (possibly including data not processed by the indexer) and triggers an index on the data as well.  This works for new records, and updating existing records.  The callback is optional.  Example:
@@ -846,12 +847,31 @@ unbase.insert( "myapp", "RECORD0001", record, function(err) {
 } );
 ```
 
+Alternatively, you can use a different `insert()` calling convention where all the arguments are passed in a single `args` variable, like this:
+
+```js
+unbase.insert( { index: "myapp", id: "RECORD0001", data: record }, function(err) {
+	// record is fully indexed
+	if (err) throw err;
+} );
+```
+
+One reason for this is so you can pass in the optional `fast` argument.  If set to `true`, this will write out the main record and return immediately after, continuing to index fields in the background.  Example:
+
+```js
+unbase.insert( { index: "myapp", id: "RECORD0001", data: record, fast: true }, function(err) {
+	// record is fully indexed
+	if (err) throw err;
+} );
+```
+
 If you use [insert()](#insert) to update an existing record, make sure you pass in the *entire* record data object each time (no sparsely populated objects).
 
 ## update
 
 ```js
 unbase.update( INDEX_ID, RECORD_ID, UPDATES, [CALLBACK] );
+unbase.update( ARGS, [CALLBACK] );
 ```
 
 The `update()` method updates a data record (possibly including data not processed by the indexer) and triggers a reindex on the data as well.  The record data you pass here can be *sparsely populated*, i.e. you can specify only changed keys if you want.  Also, string values that begin with `+` or `-` have special meaning (see below).  The callback is optional.  Example:
@@ -904,6 +924,24 @@ unbase.update( "myapp", "RECORD0001",
 ```
 
 If your function returns `false`, the update is aborted, and the final callback (if provided) is invoked with the string `ABORT` as the sole argument.
+
+Alternatively, you can use a different `update()` calling convention where all the arguments are passed in a single `args` variable, like this:
+
+```js
+unbase.update( { index: "myapp", id: "RECORD0001", data: updates }, function(err) {
+	// record is now reindexed
+	if (err) throw err;
+} );
+```
+
+One reason for this is so you can pass in the optional `fast` argument.  If set to `true`, this will update the main record and return immediately after, continuing to index fields in the background.  Example:
+
+```js
+unbase.update( { index: "myapp", id: "RECORD0001", data: updates, fast: true }, function(err) {
+	// record is now reindexed
+	if (err) throw err;
+} );
+```
 
 ## delete
 

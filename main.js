@@ -1007,6 +1007,17 @@ module.exports = Class.create({
 	
 	insert: function(index_key, record_id, record_data, callback) {
 		// insert (or update) full record
+		
+		// two calling conventions: (args, callback) and (index_key, record_id, record_data, callback?)
+		var args = {};
+		if (arguments.length < 3) {
+			args = arguments[0];
+			callback = arguments[1] || args.callback || noop;
+			index_key = args.index;
+			record_id = args.id;
+			record_data = args.data;
+		}
+		
 		if (!callback) callback = noop;
 		var self = this;
 		var index = this.indexes[index_key];
@@ -1023,6 +1034,12 @@ module.exports = Class.create({
 				if (err) {
 					self.storage.unlock( data_path );
 					return callback(err);
+				}
+				
+				// optional fast return (index in background)
+				if (args.fast) {
+					callback();
+					callback = noop;
 				}
 				
 				// now index it
@@ -1046,6 +1063,17 @@ module.exports = Class.create({
 	
 	update: function(index_key, record_id, updates, callback) {
 		// update existing record, allowing for sparse and num increments
+		
+		// two calling conventions: (args, callback) and (index_key, record_id, updates, callback?)
+		var args = {};
+		if (arguments.length < 3) {
+			args = arguments[0];
+			callback = arguments[1] || args.callback || noop;
+			index_key = args.index;
+			record_id = args.id;
+			updates = args.data || args.updates;
+		}
+		
 		if (!callback) callback = noop;
 		var self = this;
 		var index = this.indexes[index_key];
@@ -1115,6 +1143,12 @@ module.exports = Class.create({
 					if (err) {
 						self.storage.unlock( data_path );
 						return callback(err);
+					}
+					
+					// optional fast return (index in background)
+					if (args.fast) {
+						callback( null, record_data );
+						callback = noop;
 					}
 					
 					// now index it
